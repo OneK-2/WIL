@@ -15,6 +15,8 @@
 
 - FileSystem, Disk...
 
+<br>
+
 ## Layered structure of a computer system
 
 ![LayeredStructure](https://github.com/OneK-2/WIL/assets/85729858/aef6fe2c-7798-4857-95b6-8dfe0bf96306)
@@ -25,6 +27,8 @@
 |   Application    | compiler, asembler, text editor, Ms Word... |
 | Operating System |                windows10 pro                |
 |     Hardware     |        CPU, DRAM, Disk, Terminal...         |
+
+<br>
 
 ## 프로그램 실행 시 발생하는 일
 
@@ -83,18 +87,20 @@ AC: 범용 레지스터
 - I/O processing
 - file management...
 
+<br>
+
 ## OS의 정의
 
 ### Resource manager (자원 관리자)
 
-> 물리적, 추상적 자원을 관리한다.
+> **물리적, 추상적 자원을 관리한다.**
 
 - **Physical Resource**: CPU, DRAM, Disk, Flash, KBD, Network...
 - **Virtual Resource**: Process, Thread, Virtual memory, Page, File, Directory, Driver, Protocol, Access control, Security...
 
 ### Virtualization (Abstraction)
 
-> 물리적 자원을 추상화한다.
+> **물리적 자원을 추상화한다.**
 
 - CPU -> Process, Thread
 - DRAM -> Virtual memory, Page
@@ -106,7 +112,7 @@ AC: 범용 레지스터
 
 ### System call
 
-> OS가 사용자에게 제공하는 인터페이스(API) 집합
+> **OS가 사용자에게 제공하는 인터페이스(API) 집합**
 
 <br>
 
@@ -118,9 +124,9 @@ AC: 범용 레지스터
 <br>
 시스템콜은 유저모드에서 커널모드로 모드스위치를 발생시킨다.
 
-## Virtualing CPU
+## Virtualizing CPU
 
-> CPU 가상화란?
+> **CPU 가상화란?**
 
 실제 가지고 있는 CPU보다 많이 가지고 있는 것처럼 느끼게 한다. <br>
 하나의 물리적인 CPU를 여러 개의 CPU로 보이게 하는 것이다.
@@ -148,7 +154,7 @@ int main(int argc, char *argv[])
 
 ```
 
-위 코드에 대한 실행 결과
+**위 코드에 대한 실행 결과**
 
 ```
 prompt> ./cpu A & ./cpu B & ./cpu C & ./cpu D &
@@ -167,7 +173,143 @@ C
 A
 ```
 
-> 결론: 모든 프로세스들이 자신의 CPU를 가지고 있는 것처럼 추상화를 제공한다.
+> **결론: 모든 프로세스들이 자신의 CPU를 가지고 있는 것처럼 추상화를 제공한다.**
+
+<br>
+
+## Virtualizing Memory
+
+> **메모리 가상화?**
+
+물리적으로 메모리는 하나지만 프로세스들마다 마치 자기가 독립적인 메모리를 가지고 있는 것처럼 가상화시킨다.
+
+```
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "common.h"
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+	fprintf(stderr, "usage: mem <value>\n");
+	exit(1);
+    }
+    int *p;
+    p = malloc(sizeof(int));
+    assert(p != NULL); // 조건이 만족하면 계속 수행
+    printf("(%d) addr pointed to by p: %p\n", (int) getpid(), p);
+    *p = atoi(argv[1]); // assign value to addr stored in p
+    while (1) {
+	Spin(1);
+	*p = *p + 1;
+	printf("(%d) value of p: %d\n", getpid(), *p);
+    }
+    return 0;
+}
+```
+
+**위 코드에 대한 실행 결과**
+
+```
+prompt> ./mem & ./mem &
+[1] 24113
+[2] 24114
+(24113) address pointed to by p: 0x200000
+(24114) address pointed to by p: 0x200000
+(24113) p: 1
+(24114) p: 1
+(24114) p: 2
+(24113) p: 2
+(24113) p: 3
+(24114) p: 3
+(24113) p: 4
+(24114) p: 4
+
+
+```
+
+-> 주소는 같지만 독립적
+
+<br>
+
+## Concurrency
+
+> **병행성 문제란?**
+
+같은 데이터를 동시에 접근하려고 할 때 발생하는 문제
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+#include "common.h"
+#include "common_threads.h"
+
+volatile int counter = 0;
+int loops;
+
+void *worker(void *arg) {
+    int i;
+    for (i = 0; i < loops; i++) {
+	counter++;
+    }
+    return NULL;
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+	fprintf(stderr, "usage: threads <loops>\n");
+	exit(1);
+    }
+    loops = atoi(argv[1]);
+    pthread_t p1, p2;
+    printf("Initial value : %d\n", counter);
+
+    Pthread_create(&p1, NULL, worker, NULL);
+    Pthread_create(&p2, NULL, worker, NULL);
+    Pthread_join(p1, NULL);
+    Pthread_join(p2, NULL);
+    printf("Final value   : %d\n", counter);
+    return 0;
+}
+
+```
+
+```
+prompt> ./threads 100000
+Initial value : 0
+Final value : 143012 // huh??
+prompt> ./threads 100000
+Initial value : 0
+Final value : 137298 // what the??
+```
+
+실행횟수가 커지면 원자성이 지켜지지 않는다.
+
+<br>
+
+## Persistence
+
+> 영속성?
+
+- 사용자는 데이터를 영구적으로 저장하고 싶어 한다.
+- DRAM은 휘발성이므로, 스토리지에 저장해야함.
+
+  <br>
+
+- **DRAM**
+  - 용량 ↓
+  - 속도 ↑
+  - Byte 단위 (CPU가 직접 접근 가능)
+  - Volatile
+- **Disk**
+  - 용량 ↑
+  - 속도 ↓
+  - Sector 단위 (CPU가 직접 접근 불가능)
+  - Non-volatile
+
+사용자로 하여금, 데이터가 항상 신뢰성 있고, 휘발되지 않게 관리되어 있다고 생각하게 한다.
+
+<br>
 
 ### Reference
 
