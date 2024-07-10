@@ -312,6 +312,6 @@ Final value : 137298 // what the??
 <br>
 
 ### Reference
-
+- Remzi H. Arpaci-Dusseau, "Operating Systems: Three Easy Pieces"
 - W. Stalling, “Operating Systems: Internals and Design Principles”
 - A. Silberschatz, “Operating system Concept”
