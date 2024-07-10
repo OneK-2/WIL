@@ -131,7 +131,7 @@ AC: 범용 레지스터
 실제 가지고 있는 CPU보다 많이 가지고 있는 것처럼 느끼게 한다. <br>
 하나의 물리적인 CPU를 여러 개의 CPU로 보이게 하는 것이다.
 
-```
+```c
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -183,7 +183,7 @@ A
 
 물리적으로 메모리는 하나지만 프로세스들마다 마치 자기가 독립적인 메모리를 가지고 있는 것처럼 가상화시킨다.
 
-```
+```c
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -210,7 +210,7 @@ int main(int argc, char *argv[]) {
 
 **위 코드에 대한 실행 결과**
 
-```
+```sh
 prompt> ./mem & ./mem &
 [1] 24113
 [2] 24114
@@ -238,7 +238,7 @@ prompt> ./mem & ./mem &
 
 같은 데이터를 동시에 접근하려고 할 때 발생하는 문제
 
-```
+```c
 #include <stdio.h>
 #include <stdlib.h>
 #include "common.h"
